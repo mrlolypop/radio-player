@@ -7,7 +7,6 @@
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
     body {
       font-family: 'Poppins', sans-serif;
-      /* Removed background gradient here */
       color: #f0f0f0;
       display: flex;
       flex-direction: column;
@@ -17,6 +16,7 @@
       margin: 0;
       padding: 20px;
       user-select: none;
+      background: transparent;
     }
     #player-container {
       background: rgba(0,0,0,0.65);
@@ -34,22 +34,9 @@
       object-fit: cover;
       margin-bottom: 20px;
       border: 4px solid #5a4a8a;
-      /* Keep the glow but no rotation */
       box-shadow: 0 0 30px #8e8aff;
       transition: transform 0.5s ease;
     }
-    /* Removed rotation animation */
-    /*
-    #artwork.playing {
-      animation: rotate 15s linear infinite;
-      border-color: #6decb9;
-      box-shadow: 0 0 40px #6decb9;
-    }
-    @keyframes rotate {
-      0% {transform: rotate(0deg);}
-      100% {transform: rotate(360deg);}
-    }
-    */
     #title {
       font-weight: 600;
       font-size: 20px;
@@ -149,7 +136,7 @@
 </head>
 <body>
   <div id="player-container">
-    <img id="artwork" src="https://via.placeholder.com/300?text=Loading..." alt="Album Art" />
+    <img id="artwork" src="https://dummyimage.com/300x300/555/ccc&text=Radio+Live" alt="Album Art" />
     <div id="title">Loading current song...</div>
     <div id="audio-controls">
       <button id="play-pause" aria-label="Play/Pause">
@@ -168,7 +155,7 @@
   </div>
 
   <audio id="audio" preload="auto" crossorigin="anonymous">
-    <source src="http://140.245.241.175:8000/stream" type="audio/mpeg" />
+    <source src="https://waveradio.work.gd/stream" type="audio/mpeg" />
     Your browser does not support the audio element.
   </audio>
 
@@ -185,7 +172,6 @@
     const title = document.getElementById('title');
     const loadingText = document.getElementById('loading-text');
 
-    // Play/pause toggle
     playPauseBtn.addEventListener('click', () => {
       if (audio.paused) {
         audio.play();
@@ -197,18 +183,15 @@
     audio.addEventListener('play', () => {
       playIcon.style.display = 'none';
       pauseIcon.style.display = 'block';
-      // Removed rotation class addition
       loadingText.textContent = "";
     });
 
     audio.addEventListener('pause', () => {
       playIcon.style.display = 'block';
       pauseIcon.style.display = 'none';
-      // Removed rotation class removal
       loadingText.textContent = "Paused";
     });
 
-    // Progress bar update
     audio.addEventListener('timeupdate', () => {
       if (audio.duration) {
         const percent = (audio.currentTime / audio.duration) * 100;
@@ -216,7 +199,6 @@
       }
     });
 
-    // Clicking progress bar to seek
     progressBar.addEventListener('click', (e) => {
       const rect = progressBar.getBoundingClientRect();
       const clickX = e.clientX - rect.left;
@@ -226,14 +208,13 @@
       }
     });
 
-    // Volume control
     volumeControl.addEventListener('input', (e) => {
       audio.volume = e.target.value;
     });
 
     async function fetchMetadata() {
       try {
-        const res = await fetch("http://140.245.241.175:8000/status-json.xsl");
+        const res = await fetch("https://waveradio.work.gd/status-json.xsl");
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
 
@@ -250,7 +231,7 @@
         const cleanedTitle = rawTitle
           .replace(/[“”]/g, '"')
           .replace(/[‘’]/g, "'")
-          .replace(/[^\x00-\x7F]/g, "") // remove weird chars
+          .replace(/[^\x00-\x7F]/g, "")
           .trim();
 
         let artist = "";
@@ -263,7 +244,7 @@
         } else if (cleanedTitle.includes(" – ")) {
           [track, artist] = cleanedTitle.split(" – ").map(x => x.trim());
         } else {
-          track = cleanedTitle; // fallback if no split found
+          track = cleanedTitle;
         }
 
         const displayTitle = artist && track ? `${artist} - ${track}` : track;
@@ -271,7 +252,6 @@
 
         const searchQuery = encodeURIComponent(`${artist} ${track}`.trim());
 
-        // iTunes search
         const itunesRes = await fetch(`https://itunes.apple.com/search?term=${searchQuery}&media=music&limit=1`);
         const itunesData = await itunesRes.json();
 
@@ -279,7 +259,6 @@
           const artworkUrl = itunesData.results[0].artworkUrl100.replace('100x100bb', '300x300bb');
           artwork.src = artworkUrl;
         } else {
-          // Last.fm fallback
           if (artist && track) {
             const lastfmRes = await fetch(`https://ws.audioscrobbler.com/2.0/?method=track.getInfo&api_key=${LASTFM_API_KEY}&artist=${encodeURIComponent(artist)}&track=${encodeURIComponent(track)}&format=json`);
             const lastfmData = await lastfmRes.json();
@@ -289,16 +268,16 @@
             if (image) {
               artwork.src = image;
             } else {
-              artwork.src = "https://via.placeholder.com/300?text=No+Art+Found";
+              artwork.src = "https://dummyimage.com/300x300/555/ccc&text=Radio+Live";
             }
           } else {
-            artwork.src = "https://via.placeholder.com/300?text=No+Art+Found";
+            artwork.src = "https://dummyimage.com/300x300/555/ccc&text=Radio+Live";
           }
         }
       } catch (error) {
         console.error("Metadata error:", error);
         title.textContent = "Unable to load song info";
-        artwork.src = "https://via.placeholder.com/300?text=Error";
+        artwork.src = "https://dummyimage.com/300x300/555/ccc&text=Radio+Live";
       }
     }
 
